@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مترجم نصوص متعدد اللغات (OpenAI)</title>
+    <style>
+        /* التنسيقات الأساسية */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            direction: rtl; /* دعم اللغة العربية */
+            text-align: right;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        /* مربع إدخال النص */
+        #inputText {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* زر الترجمة */
+        #translateButton {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        #translateButton:hover {
+            background-color: #0b5fb2;
+        }
+        
+        #translateButton:disabled {
+            background-color: #99aab5;
+            cursor: not-allowed;
+        }
+
+        /* حاوية النتائج (مربعين جنبًا لجنب) */
+        .results-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap; /* لجعل المربعات تتكدس في الشاشات الصغيرة */
+            margin-top: 20px;
+        }
+
+        .result-box {
+            flex: 1; /* جعل المربعات تأخذ مساحة متساوية */
+            min-width: 300px; /* للتحكم في الانكماش */
+            background-color: #e8f0fe; /* خلفية فاتحة للنتائج */
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dcdcdc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            min-height: 180px; /* لتبدو المربعات متساوية */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-box h3 {
+            color: #1a73e8;
+            margin-top: 0;
+            border-bottom: 2px solid #c8dafc;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .translation-text {
+            flex-grow: 1;
+            font-size: 16px;
+            line-height: 1.7;
+            white-space: pre-wrap; /* للحفاظ على تنسيق النصوص (إذا كانت OpenAI ترجع تنسيق) */
+            margin-bottom: 10px;
+        }
+        
+        .copy-button {
+            padding: 8px 15px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            align-self: flex-start; /* وضعه في الأسفل واليمين */
+        }
+        
+        .copy-button:hover {
+            background-color: #4cae4c;
+        }
+
+        /* التنسيق للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .results-container {
+                flex-direction: column;
+            }
+            .result-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>مترجم النصوص الفوري (تيلجو وفلبيني)</h2>
+
+        <textarea id="inputText" placeholder="اكتب النص الذي تريد ترجمته هنا..." autofocus></textarea>
+        <button id="translateButton" onclick="translateText()">ترجم النص</button>
+        
+        <div class="results-container">
+            
+            <div class="result-box">
+                <h3>الهندية (التيلجو)</h3>
+                <div id="telugu" class="translation-text">... ستظهر الترجمة هنا ...</div>
+                <button class="copy-button" onclick="copyToClipboard('telugu')">نسخ</button>
+            </div>
+            
+            <div class="result-box">
+                <h3>الفلبينية</h3>
+                <div id="filipino" class="translation-text">... ستظهر الترجمة هنا ...</div>
+                <button class="copy-button" onclick="copyToClipboard('filipino')">نسخ</button>
+            </div>
+            
+        </div>
+        
+    </div>
+
+    <script type="module">
+        // **ملاحظة هامة:** هذا الكود مخصص لبيئة المتصفح. يجب أن تستبدل
+        // "YOUR_API_KEY_HERE" بمفتاح OpenAI الخاص بك ليعمل.
+        
+        import OpenAI from "https://cdn.jsdelivr.net/npm/openai@4.0.0/dist/openai.min.js";
+
+        const client = new OpenAI({
+            apiKey: "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", // **ضع مفتاح OpenAI الخاص بك هنا**
+            dangerouslyAllowBrowser: true // تفعيل العمل في المتصفح
+        });
+
+        const inputField = document.getElementById("inputText");
+        const translateBtn = document.getElementById("translateButton");
+
+        async function translateText() {
+            const text = inputField.value.trim();
+            if (text.length === 0) {
+                alert("الرجاء إدخال نص للترجمة.");
+                return;
+            }
+
+            // تعطيل الزر أثناء الترجمة
+            translateBtn.disabled = true;
+            translateBtn.innerText = "جاري الترجمة...";
+            document.getElementById("telugu").innerText = "جاري التحميل...";
+            document.getElementById("filipino").innerText = "جاري التحميل...";
+
+            try {
+                const response = await client.chat.completions.create({
+                    model: "gpt-4o-mini", // نموذج سريع وفعال
+                    messages: [
+                        {
+                            role: "system",
+                            content: "أنت مترجم محترف. قم بترجمة النص التالي بدقة إلى لغتين: الهندية (التيلجو) والفلبينية. يجب أن تبدأ نتيجة التيلجو بكلمة 'التيلجو:' وتليها الترجمة. ويجب أن تبدأ نتيجة الفلبينية بكلمة 'الفلبينية:' وتليها الترجمة. لا تضف أي نص آخر غير اللغتين المذكورتين.",
+                        },
+                        {
+                            role: "user",
+                            content: text
+                        }
+                    ]
+                });
+
+                const result = response.choices[0].message.content.trim();
+                
+                // استخدام تعابير منتظمة أكثر مرونة لاستخراج النتائج بناءً على الكلمات المفتاحية
+                const teluguMatch = result.match(/التيلجو[:：]?\s*([\s\S]*?)(?:الفلبينية[:：]|$)/i);
+                const filipinoMatch = result.match(/الفلبينية[:：]?\s*([\s\S]*)/i);
+
+                const teluguTranslation = teluguMatch ? teluguMatch[1].trim() : "تعذر استخراج ترجمة التيلجو.";
+                const filipinoTranslation = filipinoMatch ? filipinoMatch[1].trim() : "تعذر استخراج ترجمة الفلبينية.";
+
+                document.getElementById("telugu").innerText = teluguTranslation;
+                document.getElementById("filipino").innerText = filipinoTranslation;
+
+            } catch (error) {
+                console.error("خطأ في الترجمة:", error);
+                document.getElementById("telugu").innerText = "حدث خطأ أثناء الترجمة. تحقق من مفتاح API.";
+                document.getElementById("filipino").innerText = "حدث خطأ أثناء الترجمة. تحقق من مفتاح API.";
+            } finally {
+                // تفعيل الزر مجددًا
+                translateBtn.disabled = false;
+                translateBtn.innerText = "ترجم النص";
+            }
+        }
+        
+        // ربط دالة الترجمة بالنافذة لتكون متاحة للـ HTML
+        window.translateText = translateText;
+
+        // دالة النسخ
+        window.copyToClipboard = function(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert("تم نسخ النص بنجاح!");
+            }).catch(err => {
+                console.error('فشل في نسخ النص:', err);
+                alert("فشل في نسخ النص.");
+            });
+        }
+    </script>
+</body>
+</html>
