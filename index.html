@@ -6,13 +6,15 @@
     <title>مترجم نصوص متعدد اللغات (OpenAI)</title>
     <style>
         /* التنسيقات الأساسية */
+        :root {
+            direction: rtl; /* حل تنبيه المتصفح */
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             color: #333;
             margin: 0;
             padding: 20px;
-            direction: rtl; /* دعم اللغة العربية */
             text-align: right;
         }
 
@@ -71,23 +73,23 @@
             cursor: not-allowed;
         }
 
-        /* حاوية النتائج (مربعين جنبًا لجنب) */
+        /* حاوية النتائج */
         .results-container {
             display: flex;
             gap: 20px;
-            flex-wrap: wrap; /* لجعل المربعات تتكدس في الشاشات الصغيرة */
+            flex-wrap: wrap;
             margin-top: 20px;
         }
 
         .result-box {
-            flex: 1; /* جعل المربعات تأخذ مساحة متساوية */
-            min-width: 300px; /* للتحكم في الانكماش */
-            background-color: #e8f0fe; /* خلفية فاتحة للنتائج */
+            flex: 1;
+            min-width: 300px;
+            background-color: #e8f0fe;
             padding: 20px;
             border-radius: 8px;
             border: 1px solid #dcdcdc;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            min-height: 180px; /* لتبدو المربعات متساوية */
+            min-height: 180px;
             display: flex;
             flex-direction: column;
         }
@@ -106,7 +108,7 @@
             flex-grow: 1;
             font-size: 16px;
             line-height: 1.7;
-            white-space: pre-wrap; /* للحفاظ على تنسيق النصوص (إذا كانت OpenAI ترجع تنسيق) */
+            white-space: pre-wrap;
             margin-bottom: 10px;
         }
         
@@ -119,7 +121,7 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s ease;
-            align-self: flex-start; /* وضعه في الأسفل واليمين */
+            align-self: flex-start;
         }
         
         .copy-button:hover {
@@ -164,14 +166,12 @@
     </div>
 
     <script type="module">
-        // **ملاحظة هامة:** هذا الكود مخصص لبيئة المتصفح. يجب أن تستبدل
-        // "YOUR_API_KEY_HERE" بمفتاح OpenAI الخاص بك ليعمل.
-        
-        import OpenAI from "https://cdn.jsdelivr.net/npm/openai@4.0.0/dist/openai.min.js";
+        // ✅ تم تحديث رابط الـ CDN لـ OpenAI لحل مشكلة 404
+        import OpenAI from "https://cdn.jsdelivr.net/npm/openai/dist/openai.min.js";
 
         const client = new OpenAI({
             apiKey: "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", // **ضع مفتاح OpenAI الخاص بك هنا**
-            dangerouslyAllowBrowser: true // تفعيل العمل في المتصفح
+            dangerouslyAllowBrowser: true
         });
 
         const inputField = document.getElementById("inputText");
@@ -192,7 +192,7 @@
 
             try {
                 const response = await client.chat.completions.create({
-                    model: "gpt-4o-mini", // نموذج سريع وفعال
+                    model: "gpt-4o-mini",
                     messages: [
                         {
                             role: "system",
@@ -207,7 +207,6 @@
 
                 const result = response.choices[0].message.content.trim();
                 
-                // استخدام تعابير منتظمة أكثر مرونة لاستخراج النتائج بناءً على الكلمات المفتاحية
                 const teluguMatch = result.match(/التيلجو[:：]?\s*([\s\S]*?)(?:الفلبينية[:：]|$)/i);
                 const filipinoMatch = result.match(/الفلبينية[:：]?\s*([\s\S]*)/i);
 
@@ -219,8 +218,8 @@
 
             } catch (error) {
                 console.error("خطأ في الترجمة:", error);
-                document.getElementById("telugu").innerText = "حدث خطأ أثناء الترجمة. تحقق من مفتاح API.";
-                document.getElementById("filipino").innerText = "حدث خطأ أثناء الترجمة. تحقق من مفتاح API.";
+                document.getElementById("telugu").innerText = "حدث خطأ أثناء الترجمة. تحقق من مفتاح API أو مشكلة في الشبكة.";
+                document.getElementById("filipino").innerText = "حدث خطأ أثناء الترجمة. تحقق من مفتاح API أو مشكلة في الشبكة.";
             } finally {
                 // تفعيل الزر مجددًا
                 translateBtn.disabled = false;
@@ -228,14 +227,15 @@
             }
         }
         
-        // ربط دالة الترجمة بالنافذة لتكون متاحة للـ HTML
+        // ✅ ربط الدالة بالنطاق العام لحل مشكلة ReferenceError
         window.translateText = translateText;
 
         // دالة النسخ
         window.copyToClipboard = function(elementId) {
             const textToCopy = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(textToCopy).then(() => {
-                alert("تم نسخ النص بنجاح!");
+                // يمكنك تغيير هذا إلى إشعار أجمل بدلاً من alert
+                alert("تم نسخ النص بنجاح!"); 
             }).catch(err => {
                 console.error('فشل في نسخ النص:', err);
                 alert("فشل في نسخ النص.");
